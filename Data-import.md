@@ -544,3 +544,82 @@ arrange(litters_df, pups_born_alive)
     ## 10 Con7  #4/2/95/3-3         NA          NA           20       6       0       6
     ## # … with 39 more rows, and abbreviated variable names ¹​gd_of_birth,
     ## #   ²​pups_born_alive, ³​pups_dead_birth, ⁴​pups_survive
+
+## ‘%\>%’
+
+``` r
+litters_data_row = read_csv("./data/FAS_litters.csv")
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_clean_name = janitor::clean_names(litters_data_row)
+litters_data_selected = select(litters_clean_name, -pups_survive)
+litters_without_missing = drop_na(litters_data_selected, gd0_weight)
+```
+
+use the pipe operator instead
+
+``` r
+litters_df =
+  read_csv("./data/FAS_litters.csv") %>% 
+  janitor::clean_names() %>% 
+  select(-pups_survive) %>% 
+  drop_na(gd0_weight)
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+\#Tidy data
+
+\##pivot_longer
+
+``` r
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names()
+```
+
+wide format to long format
+
+``` r
+pulse_data_tidy =
+  pulse_data %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    names_prefix = "bdi_score_",
+    values_to = "bdi"
+  )
+```
+
+rewrite, combine, and extend (to add a mutate)
+
+``` r
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    names_prefix = "bdi_score_",
+    values_to = "bdi"
+  ) %>% 
+  relocate(id, visit) %>%
+  mutate(visit = recode(visit, "bl" = "00m"))
+```
